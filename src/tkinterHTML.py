@@ -2,7 +2,6 @@ import math
 import tkinter as tk
 from tkinterweb import HtmlFrame
 import markdown
-import tempfile
 from wikiParser import *
 import os
 
@@ -17,19 +16,18 @@ def getRandomSite():
     wikiParser = WikiParser(site)
     sections = wikiParser.extract_wikipedia_sections()
     checkLengthCounter = 0
-    checkFailCount = 0
     for section in sections:
-        if(checkLengthCounter < 3 and checkFailCount < 5):
-            for sectionItem in section['content']:
+        for sectionItem in section['content']:
+            if sectionItem['type'] == 'table':
+                break
+            elif(checkLengthCounter < 5):
                 if sectionItem['type'] == "paragraph":
-                    if len(sectionItem['text']) < 25:
+                    if len(sectionItem['text']) >= 50:
                         checkLengthCounter += 1
-                    else:
-                        checkFailCount += 1
-        else:
-            break
-    if checkLengthCounter >= 3 or checkFailCount >= 5:
-        wikiParser.save_sections(output_path, sections)
+            else:
+                break
+    if checkLengthCounter >= 5:
+        # wikiParser.save_sections(output_path, sections)
         m_html = markdown.markdown(wikiParser.section_toString(sections))
         htmlFrame.load_html(m_html)
     else:
@@ -42,13 +40,29 @@ htmlFrame = HtmlFrame(root, messages_enabled=False)
 getRandomSite()
 htmlFrame.pack(side = "left")
 
-
-    
 root.update()
-inputFrame = tk.Frame(root)
-redbutton = tk.Button(inputFrame, text="Red", fg="red", width = math.floor(root.winfo_width()/100), height = math.floor(root.winfo_height()/100), command= getRandomSite)
-redbutton.grid(row = 0, column = 0, sticky = "E W")
-inputFrame.pack(side = "right")
+interactFrame = tk.Frame(root)
+randbutton = tk.Button(interactFrame, text="Randomize"
+                      , width = 10,
+                      command= lambda: [print("BUTTON PRESSED!"),getRandomSite()])
+randbutton.pack()
+
+
+inputFrame = tk.Frame(interactFrame)
+inputFrame.pack()
+
+def updateGuess(*args):
+    inputButton.config(text=f"Guess ({len(entry_text.get())})")
+
+inputButton = tk.Button(inputFrame, text = "Guess (0)")
+inputButton.grid(row = 0,column = 1)
+
+entry_text = tk.StringVar()
+entry_text.trace_add("write", updateGuess)
+inputField = tk.Entry(inputFrame, textvariable=entry_text)
+inputField.grid(row = 0, column = 0)
+interactFrame.pack()
+
 root.grid_columnconfigure(1,weight=1)
 root.grid_rowconfigure(1, weight = 1)
 root.mainloop()
