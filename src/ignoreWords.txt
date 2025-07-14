@@ -1,0 +1,17 @@
+a,aa,about,above,after
+against,along,among,an,and
+are,around,as,at,be
+because,been,before,behind,being
+below,between,beyond,but,by
+despite,down,during,except,following
+for,from,had,has,have
+if,in,inside,into,is
+it,like,minus,near,next
+of,off,on,onto,opposite
+or,out,outside,over,past
+per,since,than,that,the
+there,they,this,through,to
+under,unlike,until,up,upon
+use,used,uses,using,via
+was,were,which,will,with
+within,without,

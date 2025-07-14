@@ -1,2 +1,7 @@
 # ignore pycache folder
 src/__pycache__
+
+
+# ignore troubleshooting files
+src/htmlTest.txt
+src/test.txt
