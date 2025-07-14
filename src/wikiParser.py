@@ -51,8 +51,20 @@ class WikiParser:
         soup = BeautifulSoup(response.content, 'html.parser')
         content_div = soup.find('div', {'id': 'mw-content-text'})
         
-        sections = [ {'header' : soup.find('h1').get_text().strip(), 'level' : 1, 'content' : []}]
+        sections = []
         current_section = None
+        
+        # First, get the main h1 title and any content before the first h2
+        h1_title = soup.find('h1')
+        if h1_title:
+            main_title = h1_title.get_text().strip()
+            current_section = {
+                'header': main_title,
+                'level': 1,
+                'content': []
+            }
+        
+        # Initialize skip_section variable
         skip_section = False
         
         for element in content_div.find_all(['h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol']):
@@ -63,7 +75,7 @@ class WikiParser:
                 
                 level = int(element.name[1])
                 text = re.sub(r'\[edit\]', '', element.get_text()).strip()
-                skip_section = text.lower() in ['references', 'external links']
+                skip_section = text.lower() in ['references', 'external links', 'sources', 'notes', 'further reading']
                 if not skip_section:
                     current_section = {
                         'header': text,
@@ -73,14 +85,18 @@ class WikiParser:
                 else:
                     current_section = None
             elif current_section and element.name in ['p', 'ul', 'ol']:
-                if element.name == 'p':
-                    content_item = element.get_text().strip()
-                    current_section['content'].append({'type' : 'paragraph', 'text' : self.clean_footnote(content_item)})
-                elif element.name in ['ul', 'ol']:
-                    list_item = self.extract_list(element)
-                    if list_item['items']:
-                        current_section['content'].append(list_item)
-        
+                if element.find_parent("table"):
+                    continue
+                else:
+                    if element.name == 'p':
+                        content_item = element.get_text().strip()
+                        if content_item:  # Only add non-empty paragraphs
+                            current_section['content'].append({'type': 'paragraph', 'text': self.clean_footnote(content_item)})
+                    elif element.name in ['ul', 'ol']:
+                        list_item = self.extract_list(element)
+                        if list_item['items']:
+                            current_section['content'].append(list_item)
+
         # Add the last section
         if current_section:
             sections.append(current_section)
@@ -152,12 +168,12 @@ class WikiParser:
         with open(fileName, 'w', encoding = 'utf-8') as f:
             for section in sections:
                 # f.write(f"\nSECTION: {section['header']} (Level {section['level']})\n")
-                f.write(f"\n{'#' * section['level']} {section['header']}\n")
+                f.write(f"\n{'#' * section['level']} {section['header']}\n\n")
                 
                 
                 for i, content_item in enumerate(section['content'], 1):
                     if content_item['type'] == 'paragraph':
-                        f.write(f"{content_item['text']}\n")
+                        f.write(f"{content_item['text']}\n\n")
                     
                     
                     elif content_item['type'] == 'list':
@@ -174,12 +190,12 @@ class WikiParser:
         output = ""
         for section in sections:
                 # f.write(f"\nSECTION: {section['header']} (Level {section['level']})\n")
-                output += (f"\n{'#' * section['level']} {section['header']}\n")
+                output += (f"\n{'#' * section['level']} {section['header']}\n\n")
                 
                 
                 for i, content_item in enumerate(section['content'], 1):
                     if content_item['type'] == 'paragraph':
-                        output += (f"{content_item['text']}\n")
+                        output += (f"{content_item['text']}\n\n")
                     
                     
                     elif content_item['type'] == 'list':
@@ -195,7 +211,7 @@ class WikiParser:
 
 
 if __name__ == "__main__":
-    site = "https://en.wikipedia.org/wiki/Gundam_(fictional_robot)"
+    site = "https://en.wikipedia.org/wiki/May_2020_Afghanistan_attacks"
     wikiParser = WikiParser(site)
     sections = wikiParser.extract_wikipedia_sections()
         # save_sections('redactle_test2.md',extract_wikipedia_sections("https://en.wikipedia.org/wiki/Gundam_(fictional_robot)"))
