@@ -49,7 +49,9 @@ class WikiParser:
         
         # Clean up multiple spaces and trim
         cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-        cleaned_text = unicodedata.normalize('NFKD', cleaned_text)
+        cleaned_text = unicodedata.normalize('NFD', cleaned_text)
+        cleaned_text = cleaned_text.encode('ascii','ignore')
+        cleaned_text = cleaned_text.decode('utf-8')
         return "".join([c for c in cleaned_text if not unicodedata.combining(c)])
     def extract_wikipedia_sections(self):
         """
@@ -181,15 +183,15 @@ class WikiParser:
         with open(fileName, 'w', encoding = 'utf-8') as f:
             for section in sections:
                 # f.write(f"\nSECTION: {section['header']} (Level {section['level']})\n")
-                f.write(f"\n{'#' * section['level']} {section['header']}\n\n")
+                f.write(f"{'#' * section['level']} {section['header']}\n")
                 
                 
                 for i, content_item in enumerate(section['content'], 1):
                     if content_item['type'] == 'paragraph':
-                        f.write(f"{content_item['text']}\n\n")
+                        f.write(f"{content_item['text']}\n")
                     
                     if content_item['type'] == 'blockquote':
-                        f.write(f"> {content_item['text']}\n\n")
+                        f.write(f"> {content_item['text']}\n")
                     
                     elif content_item['type'] == 'list':
                         # f.write(f"   Type: {content_item['list_type']} list\n")
@@ -227,6 +229,7 @@ class WikiParser:
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
 file_name = 'test.html'
 output_path = os.path.join(script_dir, file_name)
 
