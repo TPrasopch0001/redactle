@@ -55,8 +55,9 @@ with open(output_path, 'r', encoding='utf-8') as f:
 
 
 class redactFile:
-    def __init__(self, sections, wordList = {}, guesses = []):
+    def __init__(self, sections : dict[str, str | int], wordList : dict[str, int] = {}, guesses : list[str] = []):
         self.sections = sections
+        self.origSections = sections
         self.wordList = wordList
         self.guesses = guesses
 
@@ -66,35 +67,48 @@ class redactFile:
     def replaceSectionItem(self, sectionItem):
         redactSectionItem = []
         for word in sectionItem['text'].split():
-            wordSplit = re.split('[^a-zA-Z0-9]', word)
-            for newWord in wordSplit:
-                cleaned_word = re.sub("[^a-zA-Z0-9]+", "", newWord)
+            if re.match('[^a-zA-Z0-9]', word):
+                wordSplit = re.split(r'[^a-zA-Z0-9]', word)
+                print(f"Word Match: {word} | Split: {wordSplit}")
+                for newWord in wordSplit:
+                    cleaned_word = re.sub("[^a-zA-Z0-9]+", "", newWord)
+                    if cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses:
+                        redactSectionItem.append(newWord)
+                    else:
+                        redactWord = re.sub(r'[a-zA-Z0-9]+', redactFile.redact, newWord)
+                        redactSectionItem.append(redactWord)
+                        if newWord.lower() in self.wordList:
+                            self.wordList[newWord.lower()] += 1
+                        else:
+                            self.wordList[newWord.lower()] = 1
+            else:
+                cleaned_word = re.sub("[^a-zA-Z0-9]+", "", word)
                 if cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses:
                     redactSectionItem.append(word)
                 else:
-                    redactWord = re.sub(r'[a-zA-Z0-9]+', redactFile.redact, newWord)
+                    redactWord = re.sub(r'[a-zA-Z0-9]+', redactFile.redact, word)
                     redactSectionItem.append(redactWord)
-                    if newWord.lower() in self.wordList:
-                        self.wordList[newWord.lower()] += 1
+                    if word.lower() in self.wordList:
+                        self.wordList[word.lower()] += 1
                     else:
-                        self.wordList[newWord.lower()] = 1
+                        self.wordList[word.lower()] = 1
         return " ".join(redactSectionItem)
     
     def replaceSectionHeader(self, header):
         redactHeader = []
         for word in header.split():
             wordSplit = re.split('[^a-zA-Z0-9]', word)
-            for newWord in wordSplit:
-                cleaned_word = re.sub("[^a-zA-Z0-9]+", "", newWord)
+            for word in wordSplit:
+                cleaned_word = re.sub("[^a-zA-Z0-9]+", "", word)
                 if cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses:
                     redactHeader.append(word)
                 else:
-                    redactWord = re.sub(r'[a-zA-Z0-9]+', redactFile.redact, newWord)
+                    redactWord = re.sub(r'[a-zA-Z0-9]+', redactFile.redact, word)
                     redactHeader.append(redactWord)
-                    if newWord.lower() in self.wordList:
-                        self.wordList[newWord.lower()] += 1
+                    if word.lower() in self.wordList:
+                        self.wordList[word.lower()] += 1
                     else:
-                        self.wordList[newWord.lower()] = 1
+                        self.wordList[word.lower()] = 1
         return " ".join(redactHeader)
     
     def replaceSectionList(self, section):
@@ -178,6 +192,17 @@ class redactFile:
         self.guesses.append(guess.lower())
         return redactFile(sections, {}, self.guesses)
         
+    def checkWinCond(self):
+        titleSection = self.origSections[0]
+        title = titleSection['header']
+        print(f"Title: {title}")
+        for word in list(filter(None, re.split('[^a-zA-Z0-9]', title))):
+            cleaned_word = re.sub("[^a-zA-Z0-9]+", "", word)
+            print(f"Clean Word: {cleaned_word}")
+            if not(cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses):
+                return False
+        return True
+    
 if __name__ == "__main__":
     site = "https://en.wikipedia.org/wiki/Gundam_(fictional_robot)"
     wikiParser = wp.WikiParser(site)
