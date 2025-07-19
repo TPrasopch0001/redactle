@@ -69,7 +69,6 @@ class redactFile:
         for word in sectionItem['text'].split():
             if re.match('[^a-zA-Z0-9]', word):
                 wordSplit = re.split(r'[^a-zA-Z0-9]', word)
-                print(f"Word Match: {word} | Split: {wordSplit}")
                 for newWord in wordSplit:
                     cleaned_word = re.sub("[^a-zA-Z0-9]+", "", newWord)
                     if cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses:
@@ -143,7 +142,6 @@ class redactFile:
         with open(fileName, 'w', encoding = 'utf-8') as f:
             f.write(str(self.wordList) + "\n")
             for section in self.sections:
-                # f.write(f"\nSECTION: {section['header']} (Level {section['level']})\n")
                 f.write(f"{'#' * section['level']} {section['header']}\n")
                 
                 
@@ -155,7 +153,6 @@ class redactFile:
                         f.write(f"> {content_item['text']}\n")
                     
                     elif content_item['type'] == 'list':
-                        # f.write(f"   Type: {content_item['list_type']} list\n")
                         if content_item['list_type'] == 'ordered':
                             for j, item in enumerate(content_item['items'], 1):
                                 f.write(f"{j}. {item['text']}\n")
@@ -163,11 +160,32 @@ class redactFile:
                             for item in content_item['items']:
                                 f.write(f"- {item['text']}\n")
 
-    def section_toString(self):
+    def redactToString(self):
         """Returns the sections in markdown format as a string"""
         output = ""
         for section in self.sections:
-                # f.write(f"\nSECTION: {section['header']} (Level {section['level']})\n")
+                output += (f"{'#' * section['level']} {section['header']}\n\n")
+                
+                for i, content_item in enumerate(section['content'], 1):
+                    if content_item['type'] == 'paragraph':
+                        output += (f"{content_item['text']}\n\n")
+                    
+                    if content_item['type'] == 'blockquote':
+                        output += (f"> {content_item['text']}\n\n")
+                    
+                    elif content_item['type'] == 'list':
+                        if content_item['list_type'] == 'ordered':
+                            for j, item in enumerate(content_item['items'], 1):
+                                output += (f"{j}. {item['text']}\n")
+                        else:
+                            for item in content_item['items']:
+                                output += (f"- {item['text']}\n")
+        return output
+    
+    def origToString(self):
+        """Returns the sections in markdown format as a string"""
+        output = ""
+        for section in self.origSections:
                 output += (f"{'#' * section['level']} {section['header']}\n\n")
                 
                 
@@ -179,7 +197,6 @@ class redactFile:
                         output += (f"> {content_item['text']}\n\n")
                     
                     elif content_item['type'] == 'list':
-                        # f.write(f"   Type: {content_item['list_type']} list\n")
                         if content_item['list_type'] == 'ordered':
                             for j, item in enumerate(content_item['items'], 1):
                                 output += (f"{j}. {item['text']}\n")
@@ -195,10 +212,10 @@ class redactFile:
     def checkWinCond(self):
         titleSection = self.origSections[0]
         title = titleSection['header']
-        print(f"Title: {title}")
+        print(f"Title: {title}")  #Prints orig title used for debugging
         for word in list(filter(None, re.split('[^a-zA-Z0-9]', title))):
             cleaned_word = re.sub("[^a-zA-Z0-9]+", "", word)
-            print(f"Clean Word: {cleaned_word}")
+            print(f"Clean Word: {cleaned_word}")  #Prints next correct word not guessed
             if not(cleaned_word.lower() in ignoreWords or cleaned_word.lower() in self.guesses):
                 return False
         return True
