@@ -9,9 +9,13 @@ The program was written using Python 3.13.5
 You need to install the following python libraries
 
 > tkinter
+> 
 > tkinterweb
+> 
 > requests
+> 
 > bs4
+> 
 > markdown
 
 ## How To Play
