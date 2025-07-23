@@ -2,7 +2,7 @@
 
 This is my attempt at recreating the [Redactle Game](https://redactle.net) using Python.
 
-## Reuirements/Dependencies
+## Requirements/Dependencies
 
 The program was written using Python 3.13.5
 
@@ -17,6 +17,8 @@ You need to install the following python libraries
 > bs4
 > 
 > markdown
+
+You can install these libraries through pip
 
 ## How To Play
 
