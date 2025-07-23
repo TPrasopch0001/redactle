@@ -207,7 +207,10 @@ class redactFile:
     
     def makeGuess(self, sections, guess):
         self.guesses.append(guess.lower())
-        return redactFile(sections, {}, self.guesses)
+        """
+        Returns an updated redactFile object that adds the guess into the object's guessList, also returns the number of times the word occurred
+        """
+        return redactFile(sections, {}, self.guesses), self.wordList[guess] if guess in self.wordList else 0
         
     def checkWinCond(self):
         titleSection = self.origSections[0]
